@@ -14,12 +14,20 @@ class Square:
         self.apple = False
         self.length = 0
         self.turn_protection = False
+        self.on_body = False
 
     def change_turn(self):
-        if (not self.apple) and (self.length != 0) and (not self.turn_protection):
+        if self.length == 0 and self.on_body:
+            self.on_body = False
+        if (self.length != 0) and (not self.turn_protection):
             self.length -= 1
         if self.head:
             self.head = False
+        self.turn_protection = True
+
+    def get_apple(self):
+        if self.on_body and (not self.turn_protection):
+            self.length += 1
         self.turn_protection = True
 
     def undo_protection(self):
@@ -42,27 +50,23 @@ v_square = np.vectorize(Square)
 
 
 class Board:
-    def __init__(self, width: int = 8, height: int = 8, start_pos: (int, int) = (0, 0), start_length: int = 3):
+    def __init__(self, apple_func: callable, width: int = 8, height: int = 8, start_pos: (int, int) = (0, 0), start_length: int = 3):
         self.score = start_length
 
-        self.board = np.empty((width, height), dtype=object)
-        self.board[:, :] = v_square(np.arange(width * height).reshape((width, height)))
-        self.board[start_pos[0], start_pos[1]].head = True
-        self.board[start_pos[0], start_pos[1]].length = start_length
+        self.state = np.empty((width, height), dtype=object)
+        self.state[:, :] = v_square(np.arange(width * height).reshape((width, height)))
+        self.state[start_pos[0], start_pos[1]].head = True
+        self.state[start_pos[0], start_pos[1]].length = start_length
 
         self.head_pos = start_pos
 
         self.width = width
         self.height = height
-        self.__add_apple__()
 
-    def __add_apple__(self):
-        while True:
-            x = np.random.randint(0, self.width)
-            y = np.random.randint(0, self.height)
-            if not self.board[x, y].apple and self.board[x, y].length == 0:
-                self.board[x, y].apple = True
-                break
+        self.__add_apple__ = apple_func
+
+        self.__add_apple__(self)
+
 
     def next_board(self, move: Move):
         if move == Move.LEFT:
@@ -78,34 +82,50 @@ class Board:
                 self.head_pos[0] >= self.width or \
                 self.head_pos[1] < 0 or \
                 self.head_pos[1] >= self.height or \
-                self.board[self.head_pos[0], self.head_pos[1]].length > 1:
+                self.state[self.head_pos[0], self.head_pos[1]].length > 1:
             return False
 
         v_change = np.vectorize(lambda x: x.change_turn())
-        v_change(self.board)
+        v_change(self.state)
 
         v_undo = np.vectorize(lambda x: x.undo_protection())
-        v_undo(self.board)
+        v_undo(self.state)
+
+        self.state[self.head_pos[0], self.head_pos[1]].head = True
+        self.state[self.head_pos[0], self.head_pos[1]].on_body = True
+
+        self.state[self.head_pos[0], self.head_pos[1]].length = self.score
 
         # Increase score if apple is eaten
-        if self.board[self.head_pos[0], self.head_pos[1]].apple:
+        if self.state[self.head_pos[0], self.head_pos[1]].apple:
             self.score += 1
-            self.board[self.head_pos[0], self.head_pos[1]].apple = False
-            self.__add_apple__()
+            self.state[self.head_pos[0], self.head_pos[1]].apple = False
+            v_get_apple = np.vectorize(lambda x: x.get_apple())
+            v_get_apple(self.state)
+            v_undo(self.state)
+            self.__add_apple__(self)
 
-        self.board[self.head_pos[0], self.head_pos[1]].head = True
-        self.board[self.head_pos[0], self.head_pos[1]].length = self.score
+
 
         return True
 
     def __str__(self):
 
-        return "\n".join(["|".join([str(x) for x in row]) for row in self.board])
+        return "\n".join(["|".join([str(x) for x in row]) for row in self.state])
+
+
+def random_apples(board):
+    while True:
+        x = np.random.randint(0, board.width)
+        y = np.random.randint(0, board.height)
+        if not board.state[x, y].apple and board.state[x, y].length == 0:
+            board.state[x, y].apple = True
+            break
 
 
 if __name__ == "__main__":
     print("start")
-    board = Board()
+    board = Board(apple_func=random_apples)
     test = True
     while test:
         print(board)
