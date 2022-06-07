@@ -13,18 +13,26 @@ class Square:
         self.head = False
         self.apple = False
         self.length = 0
+        self.turn_protection = False
 
     def change_turn(self):
-        if (not self.apple) and (self.length != 0):
+        if (not self.apple) and (self.length != 0) and (not self.turn_protection):
             self.length -= 1
         if self.head:
             self.head = False
+        self.turn_protection = True
+
+    def undo_protection(self):
+        self.turn_protection = False
+
 
     def __str__(self):
         if self.head:
             return "X"
         elif self.apple:
             return "O"
+        elif self.length >= 10:
+            return "*"
         elif self.length > 0:
             return str(self.length)
         else:
@@ -78,6 +86,9 @@ class Board:
         v_change = np.vectorize(lambda x: x.change_turn())
         v_change(self.board)
 
+        v_undo = np.vectorize(lambda x: x.undo_protection())
+        v_undo(self.board)
+
         # Increase score if apple is eaten
         if self.board[self.head_pos[0], self.head_pos[1]].apple:
             self.score += 1
@@ -100,6 +111,7 @@ if __name__ == "__main__":
     test = True
     while test:
         print(board)
+
         move = input("Enter move: ")
         if move == "q":
             break
