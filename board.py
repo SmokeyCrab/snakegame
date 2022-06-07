@@ -47,7 +47,8 @@ class Square:
 
 
 class Board:
-    def __init__(self, apple_func: callable, width: int = 8, height: int = 8, start_pos: (int, int) = (0, 0), start_length: int = 3):
+    def __init__(self, apple_func: callable, width: int = 8, height: int = 8,
+                 start_pos: (int, int) = (0, 0), start_length: int = 3):
         self.score = start_length
 
         self.state = np.empty((width, height), dtype=object)
@@ -64,7 +65,6 @@ class Board:
         self.__add_apple__ = apple_func
 
         self.__add_apple__(self)
-
 
     def next_board(self, move: Move):
         if move == Move.LEFT:
@@ -102,8 +102,6 @@ class Board:
             v_get_apple(self.state)
             v_undo(self.state)
             self.__add_apple__(self)
-
-
 
         return True
 
