@@ -46,14 +46,12 @@ class Square:
             return " "
 
 
-v_square = np.vectorize(Square)
-
-
 class Board:
     def __init__(self, apple_func: callable, width: int = 8, height: int = 8, start_pos: (int, int) = (0, 0), start_length: int = 3):
         self.score = start_length
 
         self.state = np.empty((width, height), dtype=object)
+        v_square = np.vectorize(Square)
         self.state[:, :] = v_square(np.arange(width * height).reshape((width, height)))
         self.state[start_pos[0], start_pos[1]].head = True
         self.state[start_pos[0], start_pos[1]].length = start_length
