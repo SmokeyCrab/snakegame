@@ -9,7 +9,7 @@ class Move:
 
 
 class Square:
-    def __init__(self):
+    def __init__(self, pos):
         self.head = False
         self.apple = False
         self.length = 0
