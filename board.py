@@ -9,7 +9,7 @@ class Move:
 
 
 class Square:
-    def __init__(self, pos):
+    def __init__(self):
         self.head = False
         self.apple = False
         self.length = 0
@@ -24,7 +24,6 @@ class Square:
 
     def undo_protection(self):
         self.turn_protection = False
-
 
     def __str__(self):
         if self.head:
@@ -74,7 +73,6 @@ class Board:
             self.head_pos = (self.head_pos[0] - 1, self.head_pos[1])
         elif move == Move.DOWN:
             self.head_pos = (self.head_pos[0] + 1, self.head_pos[1])
-
 
         if self.head_pos[0] < 0 or \
                 self.head_pos[0] >= self.width or \
